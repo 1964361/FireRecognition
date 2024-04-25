@@ -88,28 +88,12 @@
         // Start the camera with default device
         async function startWithDefaultCamera() {
             try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(device => device.kind === 'videoinput');
-                if (videoDevices.length === 0) {
-                    throw new Error('No video input devices found.');
-                }
-
-                // Create options for camera selection
-                const selectCamera = document.createElement('select');
-                selectCamera.id = 'camera-select'; // Add id for consistency
-                selectCamera.addEventListener('change', handleCameraChange);
-                videoDevices.forEach(device => {
-                    const option = document.createElement('option');
-                    option.value = device.deviceId;
-                    option.text = device.label || `Camera ${selectCamera.length + 1}`;
-                    selectCamera.appendChild(option);
-                });
-                document.body.appendChild(selectCamera);
-
-                // Start with the first camera by default
-                startCamera(videoDevices[0].deviceId);
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                console.log('Camera access granted.');
+                initializePoseDetection();
             } catch (err) {
-                console.error('Error starting camera: ', err);
+                console.error('Camera access denied: ', err);
             }
         }
 
