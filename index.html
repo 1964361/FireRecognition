@@ -1,29 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Human Detection</title>
     <style>
-      #video-container {
-        margin: 20px;
-        position: relative;
-      }
-      #video {
-        width: 100%;
-      }
-      #camera-select {
-        margin: 20px;
-      }
-      #info {
-        margin-top: 10px;
-        font-weight: bold;
-      }
+        #video-container {
+            margin: 20px;
+            position: relative;
+        }
+        #video {
+            width: 100%;
+        }
+        #camera-select {
+            margin: 20px;
+        }
+        #info {
+            margin-top: 10px;
+            font-weight: bold;
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <div id="video-container">
-      <video id="video" autoplay></video>
+        <video id="video" autoplay></video>
     </div>
     <div id="info">Detecting humans...</div>
     <select id="camera-select"></select>
@@ -31,92 +31,90 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
     <script>
-      // Get access to the webcam
-      const video = document.getElementById("video");
-      let net; // Declare posenet model globally
-      let humanDetected = false;
+        // Get access to the webcam
+        const video = document.getElementById('video');
+        let net; // Declare posenet model globally
+        let humanDetected = false;
 
-      // Function to initialize pose detection
-      async function initializePoseDetection() {
-        net = await posenet.load();
-        console.log("PoseNet model loaded.");
+        // Function to initialize pose detection
+        async function initializePoseDetection() {
+            net = await posenet.load();
+            console.log('PoseNet model loaded.');
 
-        // Continuously detect poses
-        async function detectPose() {
-          const pose = await net.estimateSinglePose(video, {
-            flipHorizontal: true,
-          });
+            // Continuously detect poses
+            async function detectPose() {
+                const pose = await net.estimateSinglePose(video, {
+                    flipHorizontal: true
+                });
+                
+                // Check if a human body is detected
+                if (pose.score > 0.5) {
+                    console.log('Human body detected!');
+                    humanDetected = true;
+                    document.getElementById('info').innerText = 'Human Detected';
+                    document.body.style.backgroundColor = 'green'; // Example: change background color
+                } else {
+                    humanDetected = false;
+                    document.getElementById('info').innerText = 'Detecting humans...';
+                    document.body.style.backgroundColor = 'white'; // Reset background color
+                }
 
-          // Check if a human body is detected
-          if (pose.score > 0.5) {
-            console.log("Human body detected!");
-            humanDetected = true;
-            document.getElementById("info").innerText = "Human Detected";
-            document.body.style.backgroundColor = "green"; // Example: change background color
-          } else {
-            humanDetected = false;
-            document.getElementById("info").innerText = "Detecting humans...";
-            document.body.style.backgroundColor = "white"; // Reset background color
-          }
+                requestAnimationFrame(detectPose);
+            }
 
-          requestAnimationFrame(detectPose);
+            detectPose();
         }
 
-        detectPose();
-      }
-
-      // Function to start camera with specified device ID
-      async function startCamera(deviceId) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: { deviceId: { exact: deviceId } },
-          });
-          video.srcObject = stream;
-          console.log("Camera access granted.");
-          initializePoseDetection();
-        } catch (err) {
-          console.error("Camera access denied: ", err);
+        // Function to start camera with specified device ID
+        async function startCamera(deviceId) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { exact: deviceId } }
+                });
+                video.srcObject = stream;
+                console.log('Camera access granted.');
+                initializePoseDetection();
+            } catch (err) {
+                console.error('Camera access denied: ', err);
+            }
         }
-      }
 
-      // Function to handle camera change
-      function handleCameraChange() {
-        const selectedDevice = this.value;
-        startCamera(selectedDevice);
-      }
-
-      // Start the camera with default device
-      async function startWithDefaultCamera() {
-        try {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          const videoDevices = devices.filter(
-            (device) => device.kind === "videoinput"
-          );
-          if (videoDevices.length === 0) {
-            throw new Error("No video input devices found.");
-          }
-
-          // Create options for camera selection
-          const selectCamera = document.createElement("select");
-          selectCamera.id = "camera-select"; // Add id for consistency
-          selectCamera.addEventListener("change", handleCameraChange);
-          videoDevices.forEach((device) => {
-            const option = document.createElement("option");
-            option.value = device.deviceId;
-            option.text = device.label || `Camera ${selectCamera.length + 1}`;
-            selectCamera.appendChild(option);
-          });
-          document.body.appendChild(selectCamera);
-
-          // Start with the first camera by default
-          startCamera(videoDevices[0].deviceId);
-        } catch (err) {
-          console.error("Error starting camera: ", err);
+        // Function to handle camera change
+        function handleCameraChange() {
+            const selectedDevice = this.value;
+            startCamera(selectedDevice);
         }
-      }
 
-      // Automatically start with the default camera when the window loads
-      window.onload = startWithDefaultCamera;
+        // Start the camera with default device
+        async function startWithDefaultCamera() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                if (videoDevices.length === 0) {
+                    throw new Error('No video input devices found.');
+                }
+
+                // Create options for camera selection
+                const selectCamera = document.createElement('select');
+                selectCamera.id = 'camera-select'; // Add id for consistency
+                selectCamera.addEventListener('change', handleCameraChange);
+                videoDevices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.text = device.label || `Camera ${selectCamera.length + 1}`;
+                    selectCamera.appendChild(option);
+                });
+                document.body.appendChild(selectCamera);
+
+                // Start with the first camera by default
+                startCamera(videoDevices[0].deviceId);
+            } catch (err) {
+                console.error('Error starting camera: ', err);
+            }
+        }
+
+        // Automatically start with the default camera when the window loads
+        window.onload = startWithDefaultCamera;
     </script>
-  </body>
+</body>
 </html>
