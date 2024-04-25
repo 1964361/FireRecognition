@@ -85,20 +85,48 @@
             startCamera(selectedDevice);
         }
 
+        // Function to update camera list
+        async function updateCameraList() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                const cameraSelect = document.getElementById('camera-select');
+                cameraSelect.innerHTML = '';
+                videoDevices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.text = device.label || `Camera ${cameraSelect.length + 1}`;
+                    cameraSelect.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Error updating camera list: ', err);
+            }
+        }
+
         // Start the camera with default device
         async function startWithDefaultCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-                console.log('Camera access granted.');
-                initializePoseDetection();
+                await updateCameraList();
+                const videoDevices = await navigator.mediaDevices.enumerateDevices();
+                const defaultDeviceId = videoDevices.find(device => device.kind === 'videoinput')?.deviceId;
+                if (defaultDeviceId) {
+                    await startCamera(defaultDeviceId);
+                } else {
+                    throw new Error('No video input devices found.');
+                }
             } catch (err) {
-                console.error('Camera access denied: ', err);
+                console.error('Error starting camera: ', err);
             }
         }
 
         // Automatically start with the default camera when the window loads
         window.onload = startWithDefaultCamera;
+
+        // Event listener for camera change
+        document.getElementById('camera-select').addEventListener('change', function() {
+            const selectedDeviceId = this.value;
+            startCamera(selectedDeviceId);
+        });
     </script>
 </body>
 </html>
